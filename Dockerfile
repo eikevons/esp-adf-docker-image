@@ -40,12 +40,31 @@ RUN : \
  && "$ADF_PATH/esp-idf/install.sh" \
  && :
 
+SHELL ["/bin/bash", "-c"]
+# Patch source as requested by board logs
+# I (367) AUDIO_THREAD: The media_task task allocate stack on external memory
+# E (367) AUDIO_THREAD: Not found right xTaskCreateRestrictedPinnedToCore.
+# Please enter IDF-PATH with "cd $IDF_PATH" and apply the IDF patch with "git apply $ADF_PATH/idf_patches/idf_v3.3_freertos.patch" first
+# 
+# E (387) AUDIO_THREAD: Error creating RestrictedPinnedToCore media_task
+# E (397) ESP_AUDIO_CTRL: Error create media_task
+# I (397) AUDIO_HAL: Codec mode is 3, Ctrl:1
+RUN : \
+ && . "$ADF_PATH/esp-idf/export.sh" \
+ && cd $IDF_PATH \
+ && git apply "$ADF_PATH/idf_patches/idf_v3.3_freertos.patch" \
+ && :
+
 # Bootstrap entrypoint
 USER root
 RUN : \
  && { echo "#!/bin/bash"; \
       echo "set -e"; \
       echo "source \"$ADF_PATH/esp-idf/export.sh\""; \
+      echo "#echo Patching with idf_patches/idf_v3.3_freertos.patch"; \
+      echo "#pushd \"$ADF_PATH\""; \
+      echo "#git apply \"$IDF_PATH/idf_patches/idf_v3.3_freertos.patch\""; \
+      echo "#popd"; \
       echo "exec \"\$@\""; \
     } > /entrypoint.sh \
  && chmod +x /entrypoint.sh \
