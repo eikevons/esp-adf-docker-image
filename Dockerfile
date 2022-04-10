@@ -49,11 +49,11 @@ SHELL ["/bin/bash", "-c"]
 # E (387) AUDIO_THREAD: Error creating RestrictedPinnedToCore media_task
 # E (397) ESP_AUDIO_CTRL: Error create media_task
 # I (397) AUDIO_HAL: Codec mode is 3, Ctrl:1
-RUN : \
- && . "$ADF_PATH/esp-idf/export.sh" \
- && cd $IDF_PATH \
- && git apply "$ADF_PATH/idf_patches/idf_v3.3_freertos.patch" \
- && :
+# RUN : \
+#  && . "$ADF_PATH/esp-idf/export.sh" \
+#  && cd $IDF_PATH \
+#  && git apply "$ADF_PATH/idf_patches/idf_v3.3_freertos.patch" \
+#  && :
 
 # Bootstrap entrypoint
 USER root
@@ -61,10 +61,15 @@ RUN : \
  && { echo "#!/bin/bash"; \
       echo "set -e"; \
       echo "source \"$ADF_PATH/esp-idf/export.sh\""; \
-      echo "#echo Patching with idf_patches/idf_v3.3_freertos.patch"; \
-      echo "#pushd \"$ADF_PATH\""; \
-      echo "#git apply \"$IDF_PATH/idf_patches/idf_v3.3_freertos.patch\""; \
-      echo "#popd"; \
+      echo "# Image set-up at run-time"; \
+      echo "if [ -e /project/docker-prep ]; then"; \
+      echo "  if [ -x /project/docker-prep ]; then"; \
+      echo "    /project/docker-prep"; \
+      echo "  else"; \
+      echo "    echo \"Warning: /project/docker-prep is not executable!\""; \
+      echo "  fi"; \
+      echo "fi"; \
+      echo ""; \
       echo "exec \"\$@\""; \
     } > /entrypoint.sh \
  && chmod +x /entrypoint.sh \
